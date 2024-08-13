@@ -1,46 +1,55 @@
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.authtoken.models import Token
-from django.contrib.auth import authenticate
-from .serializers import UserSerializer, LoginSerializer
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect
+from django.utils.decorators import method_decorator
+from django.views import View
+
+from .forms import CustomUserCreationForm, CustomAuthenticationForm
 
 
-class RegisterView(APIView):
-    permission_classes = []
-
-    def post(self, request):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            token, created = Token.objects.get_or_create(user=user)
-            return Response({
-                'user': UserSerializer(user).data,
-                'token': token.key
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class LoginView(APIView):
-    permission_classes = []
+class RegisterView(View):
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect('dashboard')
+        form = CustomUserCreationForm()
+        return render(request, 'register.html', {'form': form})
 
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            user = authenticate(
-                username=serializer.validated_data['username'],
-                password=serializer.validated_data['password']
-            )
-            if user:
-                token, created = Token.objects.get_or_create(user=user)
-                return Response({
-                    'user': UserSerializer(user).data,
-                    'token': token.key
-                })
-        return Response({'error': 'Invalid Credentials'}, status=status.HTTP_400_BAD_REQUEST)
+        if request.user.is_authenticated:
+            return redirect('dashboard')
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('dashboard')
+        return render(request, 'register.html', {'form': form})
 
 
-class LogoutView(APIView):
+class LoginView(View):
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect('dashboard')
+        form = CustomAuthenticationForm()
+        return render(request, 'login.html', {'form': form})
+
     def post(self, request):
-        request.user.auth_token.delete()
-        return Response(status=status.HTTP_200_OK)
+        if request.user.is_authenticated:
+            return redirect('dashboard')
+        form = CustomAuthenticationForm(data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('dashboard')
+        return render(request, 'login.html', {'form': form})
+
+
+@method_decorator(login_required, name='dispatch')
+class DashboardView(View):
+    def get(self, request):
+        return render(request, 'dashboard.html')
+
+
+class LogoutView(View):
+    def get(self, request):
+        logout(request)
+        return redirect('login')

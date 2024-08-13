@@ -1,0 +1,41 @@
+{% block content %}
+   <div class="container mt-5">
+      <h2>Вхід</h2>
+      <form method="post">
+         {% csrf_token %}
+         <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+            {{ form.username }}
+            {% if form.username.errors %}
+               <small class="text-danger">
+                  {% for error in form.username.errors %}
+                     {{ error }}
+                  {% endfor %}
+               </small>
+            {% endif %}
+         </div>
+         <div class="form-group">
+            <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+            {{ form.password }}
+            {% if form.password.errors %}
+               <small class="text-danger">
+                  {% for error in form.password.errors %}
+                     {{ error }}
+                  {% endfor %}
+               </small>
+            {% endif %}
+         </div>
+         {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+               {% for error in form.non_field_errors %}
+                  {{ error }}
+               {% endfor %}
+            </div>
+         {% endif %}
+         <button type="submit" class="btn btn-primary mt-3">Увійти</button>
+      </form>
+      <div class="mt-3">
+         <p>Ще не зареєстровані? <a href="{% url 'register' %}">Зареєструватися</a></p>
+      </div>
+   </div>
+{% endblock %}
