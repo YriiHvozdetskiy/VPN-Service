@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+   <div class="container mt-5">
+      <h2>Статистика для сайту {{ site.name }}</h2>
+      <table class="table">
+         <thead>
+         <tr>
+            <th>Шлях</th>
+            <th>Кількість відвідувань</th>
+            <th>Відправлено даних</th>
+            <th>Отримано даних</th>
+         </tr>
+         </thead>
+         <tbody>
+         {% for stat in statistics %}
+            <tr>
+               <td>{{ stat.path }}</td>
+               <td>{{ stat.visits }}</td>
+               <td>{{ stat.data_sent|filesizeformat }}</td>
+               <td>{{ stat.data_received|filesizeformat }}</td>
+            </tr>
+         {% empty %}
+            <tr>
+               <td colspan="4">Немає даних статистики для цього сайту.</td>
+            </tr>
+         {% endfor %}
+         </tbody>
+      </table>
+      <a href="{% url 'sites:list' %}" class="btn btn-primary">Назад до списку сайтів</a>
+   </div>
+{% endblock %}

@@ -1,0 +1,6 @@
+<form method="post" action="{% url 'sites:add' %}">
+   {% csrf_token %}
+   {{ form.as_p }}
+   <button type="submit">Додати сайт</button>
+</form>
+<a href="{% url 'sites:list' %}">Назад до списку сайтів</a>

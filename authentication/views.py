@@ -6,6 +6,8 @@ from django.utils.decorators import method_decorator
 from django.views import View
 
 from authentication.forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileEditForm
+from sites.forms import SiteForm
+from sites.models import Site
 
 
 class RegisterView(View):
@@ -62,7 +64,29 @@ class ProfileEditView(View):
 @method_decorator(login_required, name='dispatch')
 class DashboardView(View):
     def get(self, request):
-        return render(request, 'dashboard.html')
+        user_sites = Site.objects.filter(user=request.user)
+        site_form = SiteForm()
+        context = {
+            'user_sites': user_sites,
+            'site_form': site_form,
+        }
+        return render(request, 'dashboard.html', context)
+
+    def post(self, request):
+        site_form = SiteForm(request.POST)
+        if site_form.is_valid():
+            site = site_form.save(commit=False)
+            site.user = request.user
+            site.save()
+            messages.success(request, 'Сайт успішно додано.')
+            return redirect('dashboard')
+
+        user_sites = Site.objects.filter(user=request.user)
+        context = {
+            'user_sites': user_sites,
+            'site_form': site_form,
+        }
+        return render(request, 'dashboard.html', context)
 
 
 class LogoutView(View):

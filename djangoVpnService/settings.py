@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # APPS
     'core.apps.CoreConfig',
     'authentication.apps.AuthenticationConfig',
+    'sites.apps.SitesConfig',
 ]
 
 AUTH_USER_MODEL = 'authentication.User'
@@ -52,7 +53,6 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 ROOT_URLCONF = 'djangoVpnService.urls'
