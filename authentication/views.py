@@ -1,10 +1,11 @@
+from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.utils.decorators import method_decorator
 from django.views import View
 
-from .forms import CustomUserCreationForm, CustomAuthenticationForm
+from authentication.forms import CustomUserCreationForm, CustomAuthenticationForm, UserProfileEditForm
 
 
 class RegisterView(View):
@@ -41,6 +42,21 @@ class LoginView(View):
             login(request, user)
             return redirect('dashboard')
         return render(request, 'login.html', {'form': form})
+
+
+@method_decorator(login_required, name='dispatch')
+class ProfileEditView(View):
+    def get(self, request):
+        form = UserProfileEditForm(instance=request.user)
+        return render(request, 'profile_edit.html', {'form': form})
+
+    def post(self, request):
+        form = UserProfileEditForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Профіль успішно оновлено.')
+            return redirect('dashboard')
+        return render(request, 'profile_edit.html', {'form': form})
 
 
 @method_decorator(login_required, name='dispatch')

@@ -10,6 +10,14 @@ class CustomUserCreationForm(forms.ModelForm):
         widget=forms.EmailInput(attrs={'class': 'form-control', 'autocomplete': 'email'}),
         label="Email"
     )
+    first_name = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Ім'я"
+    )
+    last_name = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Прізвище"
+    )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={'class': 'form-control'}),
         label="Пароль"
@@ -21,7 +29,7 @@ class CustomUserCreationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ('email', 'password', 'confirm_password')
+        fields = ('email', 'first_name', 'last_name', 'password', 'confirm_password')
 
     def clean_password(self):
         password = self.cleaned_data.get('password')
@@ -56,4 +64,29 @@ class CustomAuthenticationForm(AuthenticationForm):
 
     class Meta:
         model = User
-        fields = ['username', 'password']
+        fields = ('username', 'password')
+
+
+class UserProfileEditForm(forms.ModelForm):
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'autocomplete': 'email'}),
+        label="Email"
+    )
+    first_name = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Ім'я"
+    )
+    last_name = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Прізвище"
+    )
+
+    class Meta:
+        model = User
+        fields = ('email', 'first_name', 'last_name')
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("Користувач з таким email вже існує.")
+        return email
