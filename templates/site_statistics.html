@@ -1,15 +1,40 @@
 {% extends 'base.html' %}
+{% load tz %}
 
 {% block content %}
    <div class="container mt-5">
       <h2>Статистика для сайту {{ site.name }}</h2>
-      <table class="table">
+
+      <div class="row mt-4">
+         <div class="col-md-6">
+            <h4>Загальна статистика за вибраний період:</h4>
+            <ul>
+               <li>Загальна кількість відвідувань: {{ total_visits }}</li>
+               <li>Загальний обсяг відправлених даних: {{ total_data_sent|filesizeformat }}</li>
+               <li>Загальний обсяг отриманих даних: {{ total_data_received|filesizeformat }}</li>
+               <li>Середній час відповіді: {{ avg_response_time|floatformat:2 }} секунд</li>
+            </ul>
+         </div>
+         <div class="col-md-6">
+            <h4>Топ-5 найпопулярніших сторінок:</h4>
+            <ol>
+               {% for page in top_pages %}
+                  <li>{{ page.path }} ({{ page.visits }} відвідувань)</li>
+               {% endfor %}
+            </ol>
+         </div>
+      </div>
+
+      <h4 class="mt-4">Детальна статистика за шляхами:</h4>
+      <table class="table table-striped">
          <thead>
          <tr>
             <th>Шлях</th>
             <th>Кількість відвідувань</th>
             <th>Відправлено даних</th>
             <th>Отримано даних</th>
+            <th>Середній час відповіді</th>
+            <th>Останнє відвідування</th>
          </tr>
          </thead>
          <tbody>
@@ -19,14 +44,17 @@
                <td>{{ stat.visits }}</td>
                <td>{{ stat.data_sent|filesizeformat }}</td>
                <td>{{ stat.data_received|filesizeformat }}</td>
+               <td>{{ stat.response_time|floatformat:2 }} с</td>
+               <td>{% localtime on %}{{ stat.last_visit|date:"d.m.Y H:i" }}{% endlocaltime %}</td>
             </tr>
          {% empty %}
             <tr>
-               <td colspan="4">Немає даних статистики для цього сайту.</td>
+               <td colspan="6">Немає даних статистики для цього сайту.</td>
             </tr>
          {% endfor %}
          </tbody>
       </table>
-      <a href="{% url 'sites:list' %}" class="btn btn-primary">Назад до списку сайтів</a>
+
+      <a href="{% url 'sites:list' %}" class="btn btn-primary mt-3">Назад до списку сайтів</a>
    </div>
 {% endblock %}

@@ -1,16 +1,19 @@
+from datetime import timedelta
 from urllib.parse import urljoin, urlparse
 
 import requests
+import logging
+import time
 from bs4 import BeautifulSoup
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import F
+from django.db.models import F, Sum, Avg
 from django.http import HttpResponse, HttpResponseNotFound, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django.core.cache import cache
 from fake_useragent import UserAgent
-import logging
+from django.utils import timezone
 
 from sites.forms import SiteForm
 from sites.models import Site, SiteStatistics
@@ -30,7 +33,10 @@ def get_user_agent():
         return new_ua
     except Exception as e:
         logger.error(f"Помилка при отриманні User-Agent: {str(e)}")
-        return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        return ("Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                "AppleWebKit/537.36 (KHTML, like Gecko)"
+                "Chrome/91.0.4472.124 "
+                "Safari/537.36")
 
 
 @login_required
@@ -67,12 +73,14 @@ def proxy_view(request, site_name, path=''):
 
     headers = {'User-Agent': get_user_agent()}
 
+    start_time = time.time()
     try:
         response = requests.get(url, headers=headers)
         content = response.content
     except requests.RequestException as e:
         logger.error(f"Помилка при запиті до {url}: {str(e)}")
         return HttpResponse("Сталася помилка при спробі доступу до сайту", status=500)
+    end_time = time.time()
 
     soup = BeautifulSoup(content, 'html.parser')
 
@@ -81,6 +89,10 @@ def proxy_view(request, site_name, path=''):
     stats.visits = F('visits') + 1
     stats.data_sent = F('data_sent') + len(request.body)
     stats.data_received = F('data_received') + len(content)
+    stats.response_time = (stats.response_time * (stats.visits - 1) + (end_time - start_time)) / stats.visits
+    stats.status_code = response.status_code
+    stats.content_type = response.headers.get('Content-Type', '')
+    stats.user_agent = headers['User-Agent']
     stats.save()
 
     # Додаємо кнопку "Повернутися"
@@ -162,5 +174,42 @@ def proxy_resource(request, site_name, resource_path):
 @login_required
 def site_statistics(request, site_name):
     site = get_object_or_404(Site, user=request.user, name=site_name)
-    statistics = site.statistics.all().order_by('-visits')
-    return render(request, 'site_statistics.html', {'site': site, 'statistics': statistics})
+
+    # Отримуємо дати з GET-параметрів або використовуємо значення за замовчуванням
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    if start_date and end_date:
+        start_date = timezone.datetime.strptime(start_date, "%Y-%m-%d").date()
+        end_date = timezone.datetime.strptime(end_date, "%Y-%m-%d").date()
+    else:
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=30)
+
+    statistics = site.statistics.filter(
+        last_visit__date__gte=start_date,
+        last_visit__date__lte=end_date
+    ).order_by('-visits')
+
+    # Агреговані дані
+    total_visits = statistics.aggregate(Sum('visits'))['visits__sum'] or 0
+    total_data_sent = statistics.aggregate(Sum('data_sent'))['data_sent__sum'] or 0
+    total_data_received = statistics.aggregate(Sum('data_received'))['data_received__sum'] or 0
+    avg_response_time = statistics.aggregate(Avg('response_time'))['response_time__avg'] or 0
+
+    # Топ-5 найпопулярніших сторінок
+    top_pages = statistics.order_by('-visits')[:5]
+
+    context = {
+        'site': site,
+        'statistics': statistics,
+        'total_visits': total_visits,
+        'total_data_sent': total_data_sent,
+        'total_data_received': total_data_received,
+        'avg_response_time': avg_response_time,
+        'top_pages': top_pages,
+        'start_date': start_date,
+        'end_date': end_date,
+    }
+
+    return render(request, 'site_statistics.html', context)
