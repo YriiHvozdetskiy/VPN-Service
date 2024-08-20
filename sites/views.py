@@ -8,9 +8,29 @@ from django.db.models import F
 from django.http import HttpResponse, HttpResponseNotFound, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_http_methods
+from django.core.cache import cache
+from fake_useragent import UserAgent
+import logging
 
 from sites.forms import SiteForm
 from sites.models import Site, SiteStatistics
+
+logger = logging.getLogger(__name__)
+
+
+def get_user_agent():
+    cached_ua = cache.get('user_agent')
+    if cached_ua:
+        return cached_ua
+
+    try:
+        ua = UserAgent()
+        new_ua = ua.random
+        cache.set('user_agent', new_ua, 3600)  # Кешуємо на 1 годину
+        return new_ua
+    except Exception as e:
+        logger.error(f"Помилка при отриманні User-Agent: {str(e)}")
+        return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 
 
 @login_required
@@ -45,10 +65,16 @@ def proxy_view(request, site_name, path=''):
     except Http404:
         return HttpResponseNotFound(f"Сайт з ім'ям '{site_name}' не знайдено.")
 
-    response = requests.get(url)
-    content = response.content
+    headers = {'User-Agent': get_user_agent()}
 
-    soup = BeautifulSoup(response.content, 'html.parser')
+    try:
+        response = requests.get(url, headers=headers)
+        content = response.content
+    except requests.RequestException as e:
+        logger.error(f"Помилка при запиті до {url}: {str(e)}")
+        return HttpResponse("Сталася помилка при спробі доступу до сайту", status=500)
+
+    soup = BeautifulSoup(content, 'html.parser')
 
     # Оновлення статистики
     stats, _ = SiteStatistics.objects.get_or_create(site=site, path=path)
@@ -111,7 +137,13 @@ def proxy_resource(request, site_name, resource_path):
     site = get_object_or_404(Site, user=request.user, name=site_name)
     url = urljoin(site.url, resource_path)
 
-    response = requests.get(url)
+    headers = {'User-Agent': get_user_agent()}
+
+    try:
+        response = requests.get(url, headers=headers)
+    except requests.RequestException as e:
+        logger.error(f"Помилка при запиті ресурсу {url}: {str(e)}")
+        return HttpResponse("Помилка при завантаженні ресурсу", status=500)
 
     django_response = HttpResponse(
         content=response.content,
