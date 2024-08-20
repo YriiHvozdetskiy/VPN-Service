@@ -8,13 +8,14 @@ class Site(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sites')
     name = models.CharField(max_length=100)
     url = models.URLField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     def __str__(self):
         return self.name
 
     class Meta:
         unique_together = ('user', 'name')
+        ordering = ['-created_at']
 
 
 class SiteStatistics(models.Model):
