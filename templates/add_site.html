@@ -1,6 +1,25 @@
-<form method="post" action="{% url 'sites:add' %}">
-   {% csrf_token %}
-   {{ form.as_p }}
-   <button type="submit">Додати сайт</button>
-</form>
-<a href="{% url 'sites:list' %}">Назад до списку сайтів</a>
+{% extends 'base.html' %}
+
+{% block content %}
+   <div class="container mt-5">
+      <h2>Додати новий сайт</h2>
+      <form method="post">
+         {% csrf_token %}
+         {% for field in form %}
+            <div class="form-group">
+               {{ field.label_tag }}
+               {{ field }}
+               {% if field.errors %}
+                  <div class="alert alert-danger">
+                     {% for error in field.errors %}
+                        {{ error }}
+                     {% endfor %}
+                  </div>
+               {% endif %}
+            </div>
+         {% endfor %}
+         <button type="submit" class="btn btn-primary">Додати сайт</button>
+      </form>
+      <a href="{% url 'sites:list' %}" class="btn btn-secondary mt-3">Назад до списку сайтів</a>
+   </div>
+{% endblock %}

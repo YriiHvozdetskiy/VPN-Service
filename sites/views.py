@@ -24,7 +24,7 @@ def site_list(request):
 @require_http_methods(["GET", "POST"])
 def add_site(request):
     if request.method == 'POST':
-        form = SiteForm(request.POST)
+        form = SiteForm(request.POST, user=request.user)
         if form.is_valid():
             site = form.save(commit=False)
             site.user = request.user
@@ -32,7 +32,7 @@ def add_site(request):
             messages.success(request, 'Сайт успішно додано.')
             return redirect('sites:list')
     else:
-        form = SiteForm()
+        form = SiteForm(user=request.user)
     return render(request, 'add_site.html', {'form': form})
 
 
