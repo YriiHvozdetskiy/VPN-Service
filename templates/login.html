@@ -2,14 +2,14 @@
 
 {% block content %}
    <div class="container mt-5">
-      <h2>Вхід</h2>
+      <h2 class="mb-6 text-fuchsia-600 font-bold px-4 text-3xl">Вхід</h2>
       <form method="post">
          {% csrf_token %}
          <div class="form-group">
             <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
             {{ form.username }}
             {% if form.username.errors %}
-               <small class="text-danger">
+               <small class="text-red-600">
                   {% for error in form.username.errors %}
                      {{ error }}
                   {% endfor %}

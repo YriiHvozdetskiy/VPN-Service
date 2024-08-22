@@ -12,3 +12,5 @@ media
 
 .idea
 .vscode
+
+node_modules
