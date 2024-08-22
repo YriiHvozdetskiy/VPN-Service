@@ -3,6 +3,7 @@ from urllib.parse import urljoin, urlparse
 
 import requests
 import logging
+import random
 import time
 from bs4 import BeautifulSoup
 from django.contrib import messages
@@ -21,22 +22,37 @@ from sites.models import Site, SiteStatistics
 logger = logging.getLogger(__name__)
 
 
-def get_user_agent():
-    cached_ua = cache.get('user_agent')
-    if cached_ua:
-        return cached_ua
+def get_user_agent(request):
+    session_ua = request.session.get('user_agent')
+    if session_ua:
+        return session_ua
 
-    try:
-        ua = UserAgent()
-        new_ua = ua.random
-        cache.set('user_agent', new_ua, 3600)  # Кешуємо на 1 годину
-        return new_ua
-    except Exception as e:
-        logger.error(f"Помилка при отриманні User-Agent: {str(e)}")
-        return ("Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-                "AppleWebKit/537.36 (KHTML, like Gecko)"
-                "Chrome/91.0.4472.124 "
-                "Safari/537.36")
+    cached_uas = cache.get('user_agents')
+    if not cached_uas:
+        try:
+            ua = UserAgent()
+            cached_uas = [ua.random for _ in range(10)]
+            # Кешуємо цей список на 24 години
+            cache.set('user_agents', cached_uas, 60 * 60 * 24)
+        except Exception as e:
+            logger.error(f"Помилка при генерації User-Agent: {str(e)}")
+            cached_uas = [
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
+                "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0",
+                "Mozilla/5.0 (X11; Linux x86_64)"
+                "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.101 Safari/537.36",
+                "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X)"
+                "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"
+            ]
+
+    user_agent = random.choice(cached_uas)
+
+    request.session['user_agent'] = user_agent
+
+    return user_agent
 
 
 @login_required
@@ -71,7 +87,7 @@ def proxy_view(request, site_name, path=''):
     except Http404:
         return HttpResponseNotFound(f"Сайт з ім'ям '{site_name}' не знайдено.")
 
-    headers = {'User-Agent': get_user_agent()}
+    headers = {'User-Agent': get_user_agent(request)}
 
     start_time = time.time()
     try:
@@ -149,7 +165,7 @@ def proxy_resource(request, site_name, resource_path):
     site = get_object_or_404(Site, user=request.user, name=site_name)
     url = urljoin(site.url, resource_path)
 
-    headers = {'User-Agent': get_user_agent()}
+    headers = {'User-Agent': get_user_agent(request)}
 
     try:
         response = requests.get(url, headers=headers)
