@@ -1,43 +1,63 @@
 {% extends 'base.html' %}
 
 {% block content %}
-   <div class="container mt-5">
-      <h2 class="mb-6 text-fuchsia-600 font-bold px-4 text-3xl">Вхід</h2>
-      <form method="post">
-         {% csrf_token %}
-         <div class="form-group">
-            <label for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
-            {{ form.username }}
-            {% if form.username.errors %}
-               <small class="text-red-600">
-                  {% for error in form.username.errors %}
-                     {{ error }}
-                  {% endfor %}
-               </small>
-            {% endif %}
+   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-md w-full space-y-8">
+         <div>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+               Вхід до облікового запису
+            </h2>
          </div>
-         <div class="form-group">
-            <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
-            {{ form.password }}
-            {% if form.password.errors %}
-               <small class="text-danger">
-                  {% for error in form.password.errors %}
-                     {{ error }}
-                  {% endfor %}
-               </small>
-            {% endif %}
-         </div>
-         {% if form.non_field_errors %}
-            <div class="alert alert-danger" role="alert">
-               {% for error in form.non_field_errors %}
-                  {{ error }}
-               {% endfor %}
+         <form class="mt-8 space-y-6" method="post">
+            {% csrf_token %}
+            <div class="rounded-md shadow-sm -space-y-px">
+               <div class="mb-4">
+                  <label for="{{ form.username.id_for_label }}" class="sr-only">{{ form.username.label }}</label>
+                  {{ form.username }}
+               </div>
+               <div>
+                  <label for="{{ form.password.id_for_label }}" class="sr-only">{{ form.password.label }}</label>
+                  {{ form.password }}
+               </div>
             </div>
-         {% endif %}
-         <button type="submit" class="btn btn-primary mt-3">Увійти</button>
-      </form>
-      <div class="mt-3">
-         <p>Ще не зареєстровані? <a href="{% url 'register' %}">Зареєструватися</a></p>
+
+            {% if form.username.errors or form.password.errors or form.non_field_errors %}
+               <div class="rounded-md bg-red-50 p-4">
+                  <div class="flex">
+                     <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">
+                           Виникли помилки при вході:
+                        </h3>
+                        <div class="mt-2 text-sm text-red-700">
+                           <ul class="list-disc pl-5 space-y-1">
+                              {% for error in form.username.errors %}
+                                 <li>{{ error }}</li>
+                              {% endfor %}
+                              {% for error in form.password.errors %}
+                                 <li>{{ error }}</li>
+                              {% endfor %}
+                              {% for error in form.non_field_errors %}
+                                 <li>{{ error }}</li>
+                              {% endfor %}
+                           </ul>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            {% endif %}
+
+            <div>
+               <button type="submit"
+                       class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  Увійти
+               </button>
+            </div>
+         </form>
+         <div class="text-sm text-center">
+            <a href="{% url 'register' %}" class="font-medium text-indigo-600 hover:text-indigo-500">
+               Ще не зареєстровані? Створити обліковий запис
+            </a>
+         </div>
       </div>
    </div>
 {% endblock %}

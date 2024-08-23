@@ -7,23 +7,23 @@ User = get_user_model()
 
 class CustomUserCreationForm(forms.ModelForm):
     email = forms.EmailField(
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'autocomplete': 'email'}),
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'autocomplete': 'email', 'placeholder': 'Email'}),
         label="Email"
     )
     first_name = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ім\'я'}),
         label="Ім'я"
     )
     last_name = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Прізвище'}),
         label="Прізвище"
     )
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Пароль'}),
         label="Пароль"
     )
     confirm_password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Підтвердіть пароль'}),
         label="Підтвердження паролю"
     )
 
@@ -54,11 +54,11 @@ class CustomUserCreationForm(forms.ModelForm):
 
 class CustomAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'autocomplete': 'email'}),
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'autocomplete': 'email', 'placeholder': 'Email'}),
         label="Email"
     )
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Пароль'}),
         label="Пароль"
     )
 
