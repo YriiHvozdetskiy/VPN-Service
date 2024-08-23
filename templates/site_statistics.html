@@ -2,59 +2,106 @@
 {% load tz %}
 
 {% block content %}
-   <div class="container mt-5">
-      <h2>Статистика для сайту {{ site.name }}</h2>
+   <div class="min-h-screen bg-gray-100 py-6 sm:py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+         <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6">
+               <h2 class="text-2xl font-semibold text-gray-900">Статистика для сайту {{ site.name }}</h2>
+            </div>
 
-      <div class="row mt-4">
-         <div class="col-md-6">
-            <h4>Загальна статистика за вибраний період:</h4>
-            <ul>
-               <li>Загальна кількість відвідувань: {{ total_visits }}</li>
-               <li>Загальний обсяг відправлених даних: {{ total_data_sent|filesizeformat }}</li>
-               <li>Загальний обсяг отриманих даних: {{ total_data_received|filesizeformat }}</li>
-               <li>Середній час відповіді: {{ avg_response_time|floatformat:2 }} секунд</li>
-            </ul>
-         </div>
-         <div class="col-md-6">
-            <h4>Топ-5 найпопулярніших сторінок:</h4>
-            <ol>
-               {% for page in top_pages %}
-                  <li>{{ page.path }} ({{ page.visits }} відвідувань)</li>
-               {% endfor %}
-            </ol>
+            <div class="border-t border-gray-200 px-4 py-5 sm:p-0">
+               <dl class="sm:divide-y sm:divide-gray-200">
+                  <div class="sm:grid sm:grid-cols-2 sm:gap-4 sm:px-6 sm:py-5">
+                     <div>
+                        <dt class="text-sm font-medium text-gray-500">Загальна статистика за вибраний період:</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                           <ul class="list-disc pl-5 space-y-1">
+                              <li>Загальна кількість відвідувань: {{ total_visits }}</li>
+                              <li>Загальний обсяг відправлених даних: {{ total_data_sent|filesizeformat }}</li>
+                              <li>Загальний обсяг отриманих даних: {{ total_data_received|filesizeformat }}</li>
+                              <li>Середній час відповіді: {{ avg_response_time|floatformat:2 }} секунд</li>
+                           </ul>
+                        </dd>
+                     </div>
+                     <div>
+                        <dt class="text-sm font-medium text-gray-500">Топ-5 найпопулярніших сторінок:</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                           <ol class="list-decimal pl-5 space-y-1">
+                              {% for page in top_pages %}
+                                 <li>{{ page.path }} ({{ page.visits }} відвідувань)</li>
+                              {% endfor %}
+                           </ol>
+                        </dd>
+                     </div>
+                  </div>
+               </dl>
+            </div>
+
+            <div class="px-4 py-5 sm:px-6">
+               <h3 class="text-lg font-medium leading-6 text-gray-900">Детальна статистика за шляхами</h3>
+            </div>
+            <div class="overflow-x-auto">
+               <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                  <tr>
+                     <th scope="col"
+                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Шлях
+                     </th>
+                     <th scope="col"
+                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Відвідування
+                     </th>
+                     <th scope="col"
+                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Відправлено
+                     </th>
+                     <th scope="col"
+                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Отримано
+                     </th>
+                     <th scope="col"
+                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Час
+                        відповіді
+                     </th>
+                     <th scope="col"
+                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Останнє
+                        відвідування
+                     </th>
+                  </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                  {% for stat in statistics %}
+                     <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ stat.path }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ stat.visits }}</td>
+                        <td
+                           class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ stat.data_sent|filesizeformat }}</td>
+                        <td
+                           class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ stat.data_received|filesizeformat }}</td>
+                        <td
+                           class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ stat.response_time|floatformat:2 }}
+                           с
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                           {% localtime on %}{{ stat.last_visit|date:"d.m.Y H:i" }}{% endlocaltime %}</td>
+                     </tr>
+                  {% empty %}
+                     <tr>
+                        <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Немає
+                           даних статистики для цього сайту.
+                        </td>
+                     </tr>
+                  {% endfor %}
+                  </tbody>
+               </table>
+            </div>
+
+            <div class="px-4 py-5 sm:px-6">
+               <a href="{% url 'sites:list' %}"
+                  class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  Назад до списку сайтів
+               </a>
+            </div>
          </div>
       </div>
-
-      <h4 class="mt-4">Детальна статистика за шляхами:</h4>
-      <table class="table table-striped">
-         <thead>
-         <tr>
-            <th>Шлях</th>
-            <th>Кількість відвідувань</th>
-            <th>Відправлено даних</th>
-            <th>Отримано даних</th>
-            <th>Середній час відповіді</th>
-            <th>Останнє відвідування</th>
-         </tr>
-         </thead>
-         <tbody>
-         {% for stat in statistics %}
-            <tr>
-               <td>{{ stat.path }}</td>
-               <td>{{ stat.visits }}</td>
-               <td>{{ stat.data_sent|filesizeformat }}</td>
-               <td>{{ stat.data_received|filesizeformat }}</td>
-               <td>{{ stat.response_time|floatformat:2 }} с</td>
-               <td>{% localtime on %}{{ stat.last_visit|date:"d.m.Y H:i" }}{% endlocaltime %}</td>
-            </tr>
-         {% empty %}
-            <tr>
-               <td colspan="6">Немає даних статистики для цього сайту.</td>
-            </tr>
-         {% endfor %}
-         </tbody>
-      </table>
-
-      <a href="{% url 'sites:list' %}" class="btn btn-primary mt-3">Назад до списку сайтів</a>
    </div>
 {% endblock %}

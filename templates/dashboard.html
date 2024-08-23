@@ -43,9 +43,9 @@
                   {% if user_sites %}
                      <ul class="mt-4 space-y-2">
                         {% for site in user_sites %}
-                           <li class="bg-gray-50 rounded-lg p-4 flex justify-between items-center">
+                           <li class="bg-gray-50 rounded-lg p-4 flex justify-between items-center gap-2">
                               <span class="font-medium">{{ site.name }}</span>
-                              <div>
+                              <div class="flex items-center gap-4">
                                  <a href="{% url 'sites:statistics' site.name %}"
                                     class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                     Статистика
