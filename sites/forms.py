@@ -7,7 +7,17 @@ from sites.models import Site
 class SiteForm(forms.ModelForm):
     class Meta:
         model = Site
-        fields = ('name', 'url')
+        fields = ['name', 'url']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Назва сайту'
+            }),
+            'url': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://example.com'
+            })
+        }
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
