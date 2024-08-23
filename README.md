@@ -46,7 +46,7 @@
 Для запуску Tailwind CSS в режимі розробки:
 
 ```
-pnpm run dev
+docker-compose exec web pnpm run dev
 ```
 
 ## Структура проекту
