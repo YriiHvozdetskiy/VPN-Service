@@ -30,6 +30,17 @@ class SiteStatistics(models.Model):
     user_agent = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_visit = models.DateTimeField(auto_now=True)
+    is_page_view = models.BooleanField(default=False)
+    html_count = models.IntegerField(default=0)
+    image_count = models.IntegerField(default=0)
+    js_count = models.IntegerField(default=0)
+    css_count = models.IntegerField(default=0)
+    other_count = models.IntegerField(default=0)
+    html_size = models.BigIntegerField(default=0)
+    image_size = models.BigIntegerField(default=0)
+    js_size = models.BigIntegerField(default=0)
+    css_size = models.BigIntegerField(default=0)
+    other_size = models.BigIntegerField(default=0)
 
     class Meta:
         unique_together = ('site', 'path')

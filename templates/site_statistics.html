@@ -6,6 +6,12 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
          <div class="bg-white shadow overflow-hidden sm:rounded-lg">
             <div class="px-4 py-5 sm:px-6">
+               <a href="{% url 'sites:list' %}"
+                  class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                  Назад до списку сайтів
+               </a>
+            </div>
+            <div class="px-4 py-5 sm:px-6">
                <h2 class="text-2xl font-semibold text-gray-900">Статистика для сайту {{ site.name }}</h2>
             </div>
 
@@ -16,10 +22,13 @@
                         <dt class="text-sm font-medium text-gray-500">Загальна статистика за вибраний період:</dt>
                         <dd class="mt-1 text-sm text-gray-900">
                            <ul class="list-disc pl-5 space-y-1">
-                              <li>Загальна кількість відвідувань: {{ total_visits }}</li>
-                              <li>Загальний обсяг відправлених даних: {{ total_data_sent|filesizeformat }}</li>
-                              <li>Загальний обсяг отриманих даних: {{ total_data_received|filesizeformat }}</li>
-                              <li>Середній час відповіді: {{ avg_response_time|floatformat:2 }} секунд</li>
+                              <li>Загальна кількість відвідувань: {{ aggregated_data.total_visits }}</li>
+                              <li>Загальний обсяг відправлених
+                                 даних: {{ aggregated_data.total_data_sent|filesizeformat }}</li>
+                              <li>Загальний обсяг отриманих
+                                 даних: {{ aggregated_data.total_data_received|filesizeformat }}</li>
+                              <li>Середній час відповіді: {{ aggregated_data.avg_response_time|floatformat:2 }} секунд
+                              </li>
                            </ul>
                         </dd>
                      </div>
@@ -35,6 +44,67 @@
                      </div>
                   </div>
                </dl>
+            </div>
+
+            <div class="px-4 py-5 sm:px-6">
+               <h3 class="text-lg font-medium leading-6 text-gray-900">Статистика за типами контенту</h3>
+            </div>
+            <div class="overflow-x-auto">
+               <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                  <tr>
+                     <th scope="col"
+                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Тип
+                        контенту
+                     </th>
+                     <th scope="col"
+                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Кількість
+                     </th>
+                     <th scope="col"
+                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Загальний розмір
+                     </th>
+                  </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                  <tr>
+                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">HTML</td>
+                     <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ aggregated_data.total_html_count }}</td>
+                     <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ aggregated_data.total_html_size|filesizeformat }}</td>
+                  </tr>
+                  <tr>
+                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Зображення</td>
+                     <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ aggregated_data.total_image_count }}</td>
+                     <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ aggregated_data.total_image_size|filesizeformat }}</td>
+                  </tr>
+                  <tr>
+                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">JavaScript</td>
+                     <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ aggregated_data.total_js_count }}</td>
+                     <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ aggregated_data.total_js_size|filesizeformat }}</td>
+                  </tr>
+                  <tr>
+                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">CSS</td>
+                     <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ aggregated_data.total_css_count }}</td>
+                     <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ aggregated_data.total_css_size|filesizeformat }}</td>
+                  </tr>
+                  <tr>
+                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Інше</td>
+                     <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ aggregated_data.total_other_count }}</td>
+                     <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ aggregated_data.total_other_size|filesizeformat }}</td>
+                  </tr>
+                  </tbody>
+               </table>
             </div>
 
             <div class="px-4 py-5 sm:px-6">
@@ -69,7 +139,7 @@
                   </tr>
                   </thead>
                   <tbody class="bg-white divide-y divide-gray-200">
-                  {% for stat in statistics %}
+                  {% for stat in page_statistics %}
                      <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ stat.path }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ stat.visits }}</td>
@@ -82,12 +152,13 @@
                            с
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                           {% localtime on %}{{ stat.last_visit|date:"d.m.Y H:i" }}{% endlocaltime %}</td>
+                           {% localtime on %}{{ stat.last_visit|date:"d.m.Y H:i" }}{% endlocaltime %}
+                        </td>
                      </tr>
                   {% empty %}
                      <tr>
-                        <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Немає
-                           даних статистики для цього сайту.
+                        <td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                           Немає даних статистики для цього сайту.
                         </td>
                      </tr>
                   {% endfor %}
@@ -95,12 +166,6 @@
                </table>
             </div>
 
-            <div class="px-4 py-5 sm:px-6">
-               <a href="{% url 'sites:list' %}"
-                  class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                  Назад до списку сайтів
-               </a>
-            </div>
          </div>
       </div>
    </div>
