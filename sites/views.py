@@ -191,7 +191,6 @@ def process_html(content, site_name, site_url, current_path, is_main_page=True):
         'script': ['src'],
         'link': ['href'],
         'form': ['action'],
-        'iframe': ['src'],
         'video': ['src', 'poster'],
         'audio': ['src'],
         'source': ['src', 'srcset'],
@@ -205,22 +204,17 @@ def process_html(content, site_name, site_url, current_path, is_main_page=True):
                     new_value = process_url(value, site_name, site_url, current_path)
                     element[attr] = new_value
 
-            # Особлива обробка для iframe
-            if tag == 'iframe' and element.has_attr('src'):
-                iframe_src = element['src']
-                # Перевіряємо, чи є URL абсолютним
-                if not iframe_src.startswith(('http://', 'https://')):
-                    # Якщо URL відносний, перетворюємо його на абсолютний
-                    iframe_src = urljoin(site_url, iframe_src)
-                try:
-                    iframe_content = requests.get(iframe_src, timeout=10).content
-                    processed_iframe_content = process_html(iframe_content, site_name, site_url, current_path,
-                                                            is_main_page=False)
-                    element['srcdoc'] = processed_iframe_content
-                    del element['src']
-                except requests.RequestException as e:
-                    # Логуємо помилку та продовжуємо роботу
-                    print(f"Помилка при завантаженні iframe: {e}")
+    # Особлива обробка для iframe
+    for iframe in soup.find_all('iframe'):
+        if iframe.has_attr('src'):
+            # Залишаємо src атрибут без змін
+            pass
+
+        # Якщо є інші атрибути iframe, які потрібно обробити, робимо це тут
+        # Наприклад, якщо у iframe є data-атрибути з URL:
+        for attr in iframe.attrs:
+            if attr.startswith('data-') and iframe[attr].startswith(('http://', 'https://', '/')):
+                iframe[attr] = process_url(iframe[attr], site_name, site_url, current_path)
 
     # Обробка вбудованих стилів
     for style in soup.find_all('style'):
