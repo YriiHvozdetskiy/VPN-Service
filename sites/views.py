@@ -162,11 +162,11 @@ def update_statistics(site, path, request, response, content, start_time, end_ti
     stats.save()
 
 
-def process_html(content, site_name, site_url, path):
+def process_html(content, site_name, site_url, current_path, is_main_page=True):
     soup = BeautifulSoup(content, 'html.parser')
 
-    # Додаємо кнопку "Повернутися"
-    if soup.body:
+    # Додаємо кнопку "Повернутися" тільки для головної сторінки
+    if is_main_page and soup.body:
         back_button = soup.new_tag("a", attrs={
             "href": f"/sites/",
             "style": """
@@ -184,17 +184,51 @@ def process_html(content, site_name, site_url, path):
         back_button.string = "Повернутися до списку сайтів"
         soup.body.insert(0, back_button)
 
-    # Оновлення посилань та ресурсів
-    tags_to_update = ['a', 'link', 'script', 'img', 'video', 'iframe', 'source']
-    attrs_to_update = ['href', 'src', 'action']
+    # Список тегів і їх атрибутів для обробки
+    tags_attrs = {
+        'a': ['href'],
+        'img': ['src', 'srcset'],
+        'script': ['src'],
+        'link': ['href'],
+        'form': ['action'],
+        'iframe': ['src'],
+        'video': ['src', 'poster'],
+        'audio': ['src'],
+        'source': ['src', 'srcset'],
+    }
 
-    for tag in soup.find_all(tags_to_update):
-        for attr in attrs_to_update:
-            if tag.has_attr(attr):
-                value = tag[attr]
-                new_value = process_url(value, site_name, site_url, path)
-                if new_value:
-                    tag[attr] = new_value
+    for tag, attrs in tags_attrs.items():
+        for element in soup.find_all(tag):
+            for attr in attrs:
+                if element.has_attr(attr):
+                    value = element[attr]
+                    new_value = process_url(value, site_name, site_url, current_path)
+                    element[attr] = new_value
+
+            # Особлива обробка для iframe
+            if tag == 'iframe' and element.has_attr('src'):
+                iframe_src = element['src']
+                # Перевіряємо, чи є URL абсолютним
+                if not iframe_src.startswith(('http://', 'https://')):
+                    # Якщо URL відносний, перетворюємо його на абсолютний
+                    iframe_src = urljoin(site_url, iframe_src)
+                try:
+                    iframe_content = requests.get(iframe_src, timeout=10).content
+                    processed_iframe_content = process_html(iframe_content, site_name, site_url, current_path,
+                                                            is_main_page=False)
+                    element['srcdoc'] = processed_iframe_content
+                    del element['src']
+                except requests.RequestException as e:
+                    # Логуємо помилку та продовжуємо роботу
+                    print(f"Помилка при завантаженні iframe: {e}")
+
+    # Обробка вбудованих стилів
+    for style in soup.find_all('style'):
+        style.string = process_css(style.string, site_name, site_url, current_path)
+
+    # Обробка інлайн-стилів
+    for tag in soup.find_all(style=True):
+        tag['style'] = process_css(tag['style'], site_name, site_url, current_path)
 
     # Додавання мета-тегу для запобігання індексації
     if soup.head:
@@ -202,6 +236,15 @@ def process_html(content, site_name, site_url, path):
         soup.head.append(meta_tag)
 
     return str(soup)
+
+
+def process_css(css_content, site_name, site_url, current_path):
+    # Обробка URL в CSS
+    def replace_css_url(match):
+        url = match.group(1).strip("'\"")
+        return f"url('{process_url(url, site_name, site_url, current_path)}')"
+
+    return re.sub(r'url\s*\(\s*([^)]+?)\s*\)', replace_css_url, css_content)
 
 
 def process_text(content, site_name):
@@ -215,26 +258,32 @@ def process_text(content, site_name):
     return updated_content.encode('utf-8')
 
 
+def is_internal_url(url, base_url):
+    return urlparse(url).netloc == urlparse(base_url).netloc or not urlparse(url).netloc
+
+
 def process_url(url, site_name, site_url, current_path):
     parsed = urlparse(url)
-    if not parsed.netloc:  # Відносний URL
-        if url.startswith('/'):
-            # Видаляємо дублюючі слеші
-            cleaned_url = re.sub(r'/+', '/', url)
-            return f'/{site_name}{cleaned_url}'
+
+    # Обробка абсолютних URL
+    if parsed.scheme:
+        if is_internal_url(url, site_url):
+            # Внутрішній абсолютний URL
+            path = parsed.path
+            if parsed.query:
+                path += f'?{parsed.query}'
+            return f'/{site_name}{path}'
         else:
-            # Для відносних URL без початкового слешу
-            base_path = '/'.join(current_path.split('/')[:-1]) + '/'
-            full_path = urljoin(base_path, url)
-            return f'/{site_name}{full_path}'
-    elif parsed.netloc == urlparse(site_url).netloc:  # Внутрішній абсолютний URL
-        # Видаляємо дублюючі слеши в шляху
-        cleaned_path = re.sub(r'/+', '/', parsed.path)
-        new_path = f'/{site_name}{cleaned_path}'
-        if parsed.query:
-            new_path += f'?{parsed.query}'
-        return new_path
-    return url  # Зовнішній URL, залишаємо без змін
+            # Зовнішній URL, залишаємо без змін
+            return url
+
+    # Обробка відносних URL
+    if url.startswith('/'):
+        # Відносний URL від кореня
+        return f'/{site_name}{url}'
+    else:
+        # Відносний URL від поточного шляху
+        return f'/{site_name}/{urljoin(current_path, url).lstrip("/")}'
 
 
 @login_required
