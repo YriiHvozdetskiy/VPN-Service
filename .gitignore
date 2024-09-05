@@ -13,4 +13,7 @@ media
 .idea
 .vscode
 
+.pnpm-store
+
 node_modules
+aws-key.pem

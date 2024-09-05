@@ -1,0 +1,7 @@
+.vscode
+.idea
+.git
+.venv
+node_modules
+
+Dockerfile
