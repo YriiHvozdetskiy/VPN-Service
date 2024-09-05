@@ -24,17 +24,18 @@ RUN apt-get update && apt-get install -y \
 # Встановлення pnpm в основному образі
 RUN npm install -g pnpm
 
-# Копіювання node_modules з етапу збірки
-COPY --from=build /service/node_modules ./node_modules
-
 # Копіювання файлів проекту
 COPY . .
 
-# Встановлення Python залежностей
-RUN pip install --no-cache-dir -r requirements.txt
+# Копіювання node_modules з етапу збірки
+COPY --from=build /service/node_modules ./node_modules
 
-# Оновлення pip
-RUN pip install --upgrade pip
+# Встановлення Python залежностей та оновлення pip
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Встановлення Node.js залежностей за допомогою pnpm
 RUN pnpm install --frozen-lockfile
+
+# Збір статичних файлів
+RUN python manage.py collectstatic --noinput
