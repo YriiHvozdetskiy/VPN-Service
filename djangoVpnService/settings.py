@@ -118,6 +118,13 @@ DATABASES = {
     }
 }
 
+CORS_ALLOWED_ORIGINS = [
+    "http://52.91.27.105",
+    "http://ec2-52-91-27-105.compute-1.amazonaws.com",
+]
+
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+
 AUTH_PASSWORD_VALIDATORS = []
 
 # Internationalization
