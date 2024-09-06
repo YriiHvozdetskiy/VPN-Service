@@ -1,0 +1,6 @@
+- name: Update web servers
+  hosts: all
+  remote_user: ubuntu
+  roles:
+    - git_pull
+    - docker_restart
