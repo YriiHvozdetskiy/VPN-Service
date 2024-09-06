@@ -43,6 +43,7 @@
           - compose.yml
         build: true
         pull: always
+        remove_orphans: true
         state: present
         env:
           DB_ENGINE: "{{ db_engine }}"
