@@ -23,7 +23,7 @@
       git:
         repo: "git@github.com:{{ GITHUB_REPO }}.git"
         dest: "{{ APP_PATH }}"
-        version: aws
+        version: aws # з якої гілки зтягувати зміни і залишатися на ції гілки на сервері
 
     - name: Create .env file on the remote server
       ansible.builtin.copy:
