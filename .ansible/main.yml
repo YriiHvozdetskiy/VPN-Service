@@ -11,25 +11,25 @@
         version: main
 
     - name: Copy .env file
-      copy:
-        src: "../.env"
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../.env"
         dest: "{{ APP_PATH }}/.env"
 
     - name: Build and start Docker containers
-      community.docker.docker_compose:
+      community.docker.docker_compose_v2:
         project_src: "{{ APP_PATH }}"
         files:
           - compose.yml
-        build: yes
-        pull: yes
+        build: true
+        pull: true
         state: present
-        recreate: always
 
     - name: Check if containers are running
-      community.docker.docker_compose:
+      community.docker.docker_compose_v2:
         project_src: "{{ APP_PATH }}"
         files:
           - compose.yml
+        state: present
       register: output
 
     - name: Display Docker Compose output
