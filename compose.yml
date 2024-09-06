@@ -5,6 +5,7 @@ services:
     volumes:
       - .:/service
       - /service/node_modules
+      - static_volume:/service/static
     ports:
       - "8000:8000"
     env_file:
@@ -26,8 +27,8 @@ services:
   nginx:
     image: nginx:alpine-slim
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - static_volume:/app/static
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf # використання власного конфігураційного файлу для Nginx
+      - static_volume:/service/static
     ports:
       - 80:80
     depends_on:
