@@ -13,14 +13,11 @@ jobs:
       - name: Run playbook
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          # Required, playbook filepath
           playbook: .ansible/main.yml
-          # Optional, SSH private key
           key: ${{secrets.SSH_PRIVATE_KEY}}
           inventory: |
             [all]
             ${{secrets.AWS_HOST}} address=localhost
           options: |
             -e GITHUB_REPO=${{github.repository}}
-        #   -e APP_PORT=${{vars.APP_PORT}}
             -e APP_PATH=${{vars.APP_PATH}}
