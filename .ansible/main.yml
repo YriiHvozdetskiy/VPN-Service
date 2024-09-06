@@ -14,6 +14,11 @@
     postgres_password: "{{ lookup('env', 'POSTGRES_PASSWORD') }}"
     csrf_trusted_origins: "{{ lookup('env', 'CSRF_TRUSTED_ORIGINS') }}"
   tasks:
+    - name: Copy nginx.conf to the server
+      copy:
+      src: ../nginx.conf
+      dest: "{{ APP_PATH }}/nginx.conf"
+
     - name: Pull app changes
       git:
         repo: "git@github.com:{{ GITHUB_REPO }}.git"
