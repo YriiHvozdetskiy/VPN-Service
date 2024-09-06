@@ -41,7 +41,7 @@
         project_src: "{{ APP_PATH }}"
         files:
           - compose.yml
-        build: yes
+        build: always
         pull: always
         remove_orphans: yes
         state: present
