@@ -5,13 +5,28 @@ on:
     branches: [ aws ]
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        name: Сheckout
-      - name: Run playbook
+        name: Checkout
+
+      - name: Install Ansible community.docker collection
+        run: ansible-galaxy collection install community.docker
+
+      - name: Run Ansible playbook
         uses: dawidd6/action-ansible-playbook@v2
+        env:
+          DB_ENGINE: django.db.backends.postgresql
+          DB_NAME: vpn_service
+          DB_USER: vpn_user
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: db
+          DB_PORT: 5432
+          POSTGRES_DB: vpn_service
+          POSTGRES_USER: vpn_user
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          CSRF_TRUSTED_ORIGINS: ${{ secrets.CSRF_TRUSTED_ORIGINS }}
         with:
           playbook: .ansible/main.yml
           key: ${{secrets.SSH_PRIVATE_KEY}}
@@ -21,3 +36,4 @@ jobs:
           options: |
             -e GITHUB_REPO=${{github.repository}}
             -e APP_PATH=${{vars.APP_PATH}}
+            -vvv

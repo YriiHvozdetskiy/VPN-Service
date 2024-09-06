@@ -3,6 +3,16 @@
   remote_user: ubuntu
   vars:
     ansible_python_interpreter: /usr/bin/python3
+    db_engine: "{{ lookup('env', 'DB_ENGINE') }}"
+    db_name: "{{ lookup('env', 'DB_NAME') }}"
+    db_user: "{{ lookup('env', 'DB_USER') }}"
+    db_password: "{{ lookup('env', 'DB_PASSWORD') }}"
+    db_host: "{{ lookup('env', 'DB_HOST') }}"
+    db_port: "{{ lookup('env', 'DB_PORT') }}"
+    postgres_db: "{{ lookup('env', 'POSTGRES_DB') }}"
+    postgres_user: "{{ lookup('env', 'POSTGRES_USER') }}"
+    postgres_password: "{{ lookup('env', 'POSTGRES_PASSWORD') }}"
+    csrf_trusted_origins: "{{ lookup('env', 'CSRF_TRUSTED_ORIGINS') }}"
   tasks:
     - name: Pull app changes
       git:
@@ -10,10 +20,21 @@
         dest: "{{ APP_PATH }}"
         version: main
 
-    - name: Copy .env file
+    - name: Create .env file on the remote server
       ansible.builtin.copy:
-        src: "{{ playbook_dir }}/../.env"
+        content: |
+          DB_ENGINE={{ db_engine }}
+          DB_NAME={{ db_name }}
+          DB_USER={{ db_user }}
+          DB_PASSWORD={{ db_password }}
+          DB_HOST={{ db_host }}
+          DB_PORT={{ db_port }}
+          POSTGRES_DB={{ postgres_db }}
+          POSTGRES_USER={{ postgres_user }}
+          POSTGRES_PASSWORD={{ postgres_password }}
+          CSRF_TRUSTED_ORIGINS={{ csrf_trusted_origins }}
         dest: "{{ APP_PATH }}/.env"
+        mode: '0600'
 
     - name: Build and start Docker containers
       community.docker.docker_compose_v2:
@@ -23,6 +44,17 @@
         build: true
         pull: true
         state: present
+        env:
+          DB_ENGINE: "{{ db_engine }}"
+          DB_NAME: "{{ db_name }}"
+          DB_USER: "{{ db_user }}"
+          DB_PASSWORD: "{{ db_password }}"
+          DB_HOST: "{{ db_host }}"
+          DB_PORT: "{{ db_port }}"
+          POSTGRES_DB: "{{ postgres_db }}"
+          POSTGRES_USER: "{{ postgres_user }}"
+          POSTGRES_PASSWORD: "{{ postgres_password }}"
+          CSRF_TRUSTED_ORIGINS: "{{ csrf_trusted_origins }}"
 
     - name: Check if containers are running
       community.docker.docker_compose_v2:
