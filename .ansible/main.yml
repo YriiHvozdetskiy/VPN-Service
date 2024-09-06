@@ -41,9 +41,9 @@
         project_src: "{{ APP_PATH }}"
         files:
           - compose.yml
-        build: true
+        build: yes
         pull: always
-        remove_orphans: true
+        remove_orphans: yes
         state: present
         env:
           DB_ENGINE: "{{ db_engine }}"
