@@ -1,8 +1,3 @@
-- name: Load environment variables
-  ansible.builtin.include_vars:
-    file: "{{ APP_PATH }}/.env"
-    name: env_vars
-
 - name: Build docker image
   docker_image:
     name: vpn_image
@@ -20,4 +15,3 @@
     restart: true  # перезапускаємо контейнер
     ports:
       - "80:80"
-    env: "{{ env_vars }}"
