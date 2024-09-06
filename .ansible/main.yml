@@ -15,9 +15,9 @@
     csrf_trusted_origins: "{{ lookup('env', 'CSRF_TRUSTED_ORIGINS') }}"
   tasks:
     - name: Copy nginx.conf to the server
-      copy:
-      src: ../nginx.conf
-      dest: "{{ APP_PATH }}/nginx.conf"
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../nginx.conf"
+        dest: "{{ APP_PATH }}/nginx.conf"
 
     - name: Pull app changes
       git:
