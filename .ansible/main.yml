@@ -1,6 +1,37 @@
 - name: Update web servers
   hosts: all
   remote_user: ubuntu
-  roles:
-    - git_pull
-    - docker_restart
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+    - name: Pull app changes
+      git:
+        repo: "git@github.com:{{ GITHUB_REPO }}.git"
+        dest: "{{ APP_PATH }}"
+        version: main
+
+    - name: Copy .env file
+      copy:
+        src: "../.env"
+        dest: "{{ APP_PATH }}/.env"
+
+    - name: Build and start Docker containers
+      community.docker.docker_compose:
+        project_src: "{{ APP_PATH }}"
+        files:
+          - compose.yml
+        build: yes
+        pull: yes
+        state: present
+        recreate: always
+
+    - name: Check if containers are running
+      community.docker.docker_compose:
+        project_src: "{{ APP_PATH }}"
+        files:
+          - compose.yml
+      register: output
+
+    - name: Display Docker Compose output
+      debug:
+        var: output
