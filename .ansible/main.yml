@@ -45,17 +45,6 @@
         pull: always
         remove_orphans: yes
         state: present
-        env:
-          DB_ENGINE: "{{ db_engine }}"
-          DB_NAME: "{{ db_name }}"
-          DB_USER: "{{ db_user }}"
-          DB_PASSWORD: "{{ db_password }}"
-          DB_HOST: "{{ db_host }}"
-          DB_PORT: "{{ db_port }}"
-          POSTGRES_DB: "{{ postgres_db }}"
-          POSTGRES_USER: "{{ postgres_user }}"
-          POSTGRES_PASSWORD: "{{ postgres_password }}"
-          CSRF_TRUSTED_ORIGINS: "{{ csrf_trusted_origins }}"
 
     - name: Check if containers are running
       community.docker.docker_compose_v2:
