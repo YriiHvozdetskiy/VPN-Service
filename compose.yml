@@ -5,7 +5,6 @@ services:
     volumes:
       - .:/service
       - /service/node_modules
-      - static_volume:/service/static
     ports:
       - "8000:8000"
     env_file:
